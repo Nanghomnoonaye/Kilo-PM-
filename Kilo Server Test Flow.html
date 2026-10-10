@@ -1,0 +1,204 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kilo Server Test Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: process strip (SMT → flying probe → Jupiter) with drawn illustrations, then the chat story as trilingual cards */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --fg:#17202b; --muted:#5b6878; --line:#dde3ea;
+  --accent:#1f5fa8; --accent-soft:#e3edf8; --tone:#b8501f;
+  --pcb:#2f7d5b; --pcb-dark:#1f5a40; --chip:#2a3340; --metal:#9aa7b5; --warn:#c9302c;
+  --zh:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151c; --surface:#18202a; --fg:#e7edf4; --muted:#93a1b2; --line:#2a3542;
+  --accent:#7fb1ea; --accent-soft:#1d2d40; --tone:#f0956a;
+  --pcb:#3f9a72; --pcb-dark:#2a6e50; --chip:#0c1117; --metal:#b8c4d1; --warn:#ef6b66; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151c; --surface:#18202a; --fg:#e7edf4; --muted:#93a1b2; --line:#2a3542;
+  --accent:#7fb1ea; --accent-soft:#1d2d40; --tone:#f0956a;
+  --pcb:#3f9a72; --pcb-dark:#2a6e50; --chip:#0c1117; --metal:#b8c4d1; --warn:#ef6b66; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header h1{font-family:var(--zh);font-size:1.6rem;font-weight:700;margin:0;text-wrap:balance}
+header p{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;color:var(--muted);font:500 13px var(--body);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
+.warn{font-size:13px;color:var(--tone)}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
+@media (max-width:640px){.flow{grid-template-columns:1fr}}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0;position:relative}
+.step.hot{border-color:var(--warn)}
+.tag{position:absolute;top:10px;right:10px;font:600 11px var(--body);letter-spacing:.04em;color:var(--warn);text-transform:uppercase}
+.step svg{width:100%;height:auto;max-width:100%;display:block;background:var(--accent-soft);border-radius:8px}
+.num{font:500 12px var(--mono);color:var(--muted)}
+/* phrase lines */
+.line{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.play{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer;display:grid;place-items:center;flex:none}
+.play.on{background:var(--accent);color:var(--bg)}
+.play:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.play svg{width:14px;height:14px;background:none}
+.txt{min-width:0}
+.zh{font-family:var(--zh);font-size:1.1rem;font-weight:500;line-height:1.45}
+.py{font-family:var(--mono);font-size:12.5px;color:var(--tone);margin-top:2px}
+.en{margin-top:2px}
+/* story */
+.story{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start}
+@media (max-width:480px){.card{grid-template-columns:1fr}.card .ill{max-width:96px}}
+.card .ill svg{width:100%;height:auto;display:block;background:var(--accent-soft);border-radius:8px}
+.card h3{margin:0 0 8px;font-size:14px;font-weight:600}
+.card .body{display:flex;flex-direction:column;gap:12px;min-width:0}
+.who{font-size:12px;color:var(--muted)}
+footer{color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>伺服器測試流程</h1>
+    <p>What the Kilo PM chat was about, step by step. Tap ▶ to hear each Chinese sentence.</p>
+  </header>
+
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Speed">
+      <button id="sp-slow" aria-pressed="false">Slow</button>
+      <button id="sp-norm" aria-pressed="true">Normal</button>
+    </div>
+    <span id="warn" class="warn" hidden>No Chinese voice found on this device. Try Safari or Chrome.</span>
+  </div>
+
+  <section>
+    <h2>The production flow</h2>
+    <div class="flow">
+      <div class="step">
+        <span class="num">Step 1</span>
+        <svg viewBox="0 0 200 120" role="img" aria-label="SMT machine placing chips on a board">
+          <rect x="20" y="70" width="160" height="34" rx="3" fill="var(--pcb)"/>
+          <rect x="20" y="98" width="160" height="6" fill="var(--pcb-dark)"/>
+          <rect x="40" y="62" width="26" height="10" rx="1" fill="var(--chip)"/>
+          <rect x="80" y="62" width="18" height="10" rx="1" fill="var(--chip)"/>
+          <rect x="138" y="62" width="22" height="10" rx="1" fill="var(--chip)"/>
+          <rect x="96" y="12" width="40" height="14" rx="3" fill="var(--metal)"/>
+          <rect x="112" y="26" width="8" height="22" fill="var(--metal)"/>
+          <rect x="106" y="48" width="20" height="8" rx="1" fill="var(--chip)"/>
+          <path d="M116 58v2" stroke="var(--accent)" stroke-width="2" stroke-dasharray="2 2"/>
+        </svg>
+        <div class="line"></div>
+      </div>
+      <div class="step hot">
+        <span class="tag">Bottleneck</span>
+        <span class="num">Step 2</span>
+        <svg viewBox="0 0 200 120" role="img" aria-label="Flying probe needles touching test points on a board">
+          <rect x="20" y="70" width="160" height="34" rx="3" fill="var(--pcb)"/>
+          <rect x="20" y="98" width="160" height="6" fill="var(--pcb-dark)"/>
+          <g fill="#e8c35a"><circle cx="45" cy="80" r="3"/><circle cx="70" cy="88" r="3"/><circle cx="95" cy="80" r="3"/><circle cx="120" cy="90" r="3"/><circle cx="145" cy="80" r="3"/><circle cx="165" cy="90" r="3"/></g>
+          <rect x="30" y="8" width="34" height="14" rx="3" fill="var(--metal)"/>
+          <line x1="47" y1="22" x2="70" y2="85" stroke="var(--metal)" stroke-width="3" stroke-linecap="round"/>
+          <rect x="136" y="8" width="34" height="14" rx="3" fill="var(--metal)"/>
+          <line x1="153" y1="22" x2="120" y2="87" stroke="var(--metal)" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="70" cy="88" r="6" fill="none" stroke="var(--warn)" stroke-width="1.5"/>
+          <circle cx="120" cy="90" r="6" fill="none" stroke="var(--warn)" stroke-width="1.5"/>
+        </svg>
+        <div class="line"></div>
+      </div>
+      <div class="step">
+        <span class="num">Step 3</span>
+        <svg viewBox="0 0 200 120" role="img" aria-label="Jupiter test station with a board plugged in and a screen">
+          <rect x="30" y="14" width="140" height="94" rx="6" fill="var(--chip)"/>
+          <rect x="42" y="24" width="116" height="40" rx="3" fill="var(--accent-soft)"/>
+          <text x="100" y="40" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--accent)">FRU WRITE</text>
+          <rect x="54" y="48" width="92" height="6" rx="3" fill="var(--line)"/>
+          <rect x="54" y="48" width="60" height="6" rx="3" fill="var(--accent)"/>
+          <rect x="50" y="76" width="100" height="22" rx="2" fill="var(--pcb)"/>
+          <circle cx="160" cy="86" r="4" fill="var(--warn)"/>
+        </svg>
+        <div class="line"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What happened in the chat</h2>
+    <div class="story" id="story"></div>
+  </section>
+
+  <footer>Audio uses your device's built-in Chinese voice. Drawings are simplified illustrations, not photos of the real machines.</footer>
+</div>
+
+<script>
+const FLOW = [
+  ["SMT 表面黏著","SMT biǎomiàn niánzhuó","SMT: machines place and solder parts onto the board."],
+  ["飛針測試","fēizhēn cèshì","Flying probe test: needles touch test points to check for shorts and opens."],
+  ["Jupiter 功能測試","Jupiter gōngnéng cèshì","Jupiter functional test. Right now it only does FRU programming."],
+];
+
+const ILL = {
+  probe:`<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="8" y="48" width="64" height="20" rx="2" fill="var(--pcb)"/><circle cx="26" cy="56" r="2.5" fill="#e8c35a"/><circle cx="54" cy="58" r="2.5" fill="#e8c35a"/><line x1="18" y1="10" x2="26" y2="54" stroke="var(--metal)" stroke-width="3" stroke-linecap="round"/><line x1="62" y1="10" x2="54" y2="56" stroke="var(--metal)" stroke-width="3" stroke-linecap="round"/><path d="M30 30h20" stroke="var(--warn)" stroke-width="2"/><path d="M44 25l6 5-6 5" fill="none" stroke="var(--warn)" stroke-width="2"/></svg>`,
+  customer:`<svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="28" r="12" fill="var(--metal)"/><path d="M18 70c0-14 10-22 22-22s22 8 22 22z" fill="var(--metal)"/><circle cx="62" cy="20" r="11" fill="var(--warn)"/><path d="M57 15l10 10M67 15l-10 10" stroke="var(--bg)" stroke-width="2.5"/></svg>`,
+  jupiter:`<svg viewBox="0 0 80 80" aria-hidden="true"><g fill="var(--chip)"><rect x="8" y="14" width="18" height="52" rx="2"/><rect x="31" y="14" width="18" height="52" rx="2"/><rect x="54" y="14" width="18" height="52" rx="2"/></g><g fill="var(--accent)"><circle cx="17" cy="24" r="2.5"/><circle cx="40" cy="24" r="2.5"/><circle cx="63" cy="24" r="2.5" fill="var(--warn)"/></g><text x="40" y="76" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="9" fill="var(--muted)">× 5</text></svg>`,
+  move:`<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="4" y="30" width="26" height="40" fill="var(--metal)"/><rect x="50" y="22" width="26" height="48" fill="var(--metal)"/><text x="17" y="54" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" font-weight="600" fill="var(--chip)">H1</text><text x="63" y="50" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" font-weight="600" fill="var(--chip)">A5</text><path d="M24 18c10-10 22-10 32 0" fill="none" stroke="var(--accent)" stroke-width="2.5"/><path d="M50 12l6 6-8 2" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg>`,
+  hand:`<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="30" y="18" width="10" height="34" rx="5" fill="var(--metal)"/><rect x="41" y="12" width="10" height="40" rx="5" fill="var(--metal)"/><rect x="52" y="18" width="10" height="34" rx="5" fill="var(--metal)"/><rect x="20" y="34" width="10" height="22" rx="5" fill="var(--metal)"/><rect x="22" y="44" width="40" height="28" rx="10" fill="var(--metal)"/><text x="40" y="10" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="10" font-weight="700" fill="var(--warn)">RISK</text></svg>`,
+  label:`<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M10 22h40l20 18-20 18H10z" fill="var(--surface)" stroke="var(--metal)" stroke-width="2"/><circle cx="52" cy="40" r="4" fill="var(--metal)"/><g stroke="var(--chip)" stroke-width="2"><line x1="16" y1="30" x2="16" y2="50"/><line x1="20" y1="30" x2="20" y2="50"/><line x1="25" y1="30" x2="25" y2="50"/><line x1="28" y1="30" x2="28" y2="50"/><line x1="33" y1="30" x2="33" y2="50"/><line x1="38" y1="30" x2="38" y2="50"/></g><circle cx="60" cy="64" r="10" fill="var(--warn)"/><text x="60" y="69" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="14" font-weight="700" fill="var(--bg)">≠</text></svg>`,
+};
+
+const STORY = [
+  { ill:"probe", title:"1. The problem: flying probe is too slow", who:"Bob", lines:[
+    ["飛針測試是瓶頸。我們想減少測點，縮短 CT。","fēizhēn cèshì shì píngjǐng. wǒmen xiǎng jiǎnshǎo cèdiǎn, suōduǎn CT.","Flying probe is the bottleneck. We want to cut test points to shorten cycle time."],
+  ]},
+  { ill:"customer", title:"2. The customer says not yet", who:"Juan (customer), explained by Toby", lines:[
+    ["Jupiter 測試現在只有 FRU programming，所以不建議現在就減少飛針測點。","Jupiter cèshì xiànzài zhǐyǒu FRU programming, suǒyǐ bú jiànyì xiànzài jiù jiǎnshǎo fēizhēn cèdiǎn.","Jupiter only does FRU programming now, so he doesn't recommend cutting flying probe points yet."],
+    ["下週二後會有新版的 Jupiter TP，再考慮減少測點。","xià zhōu èr hòu huì yǒu xīnbǎn de Jupiter TP, zài kǎolǜ jiǎnshǎo cèdiǎn.","A new Jupiter test program comes after next Tuesday. Then they'll reconsider."],
+  ]},
+  { ill:"jupiter", title:"3. The hidden worry: Jupiter could become the bottleneck", who:"Bob and Toby", lines:[
+    ["Jupiter 機台不穩，現在只有五台，可能變成新的瓶頸。","Jupiter jītái bù wěn, xiànzài zhǐyǒu wǔ tái, kěnéng biànchéng xīn de píngjǐng.","Jupiter machines are unstable and there are only five, so it could become the new bottleneck."],
+  ]},
+  { ill:"move", title:"4. The capacity plan: move a tester from H1 to A5", who:"Bob", lines:[
+    ["把 H1 一台飛針轉到 A5，H1 飛針產能每天可能只有 80 到 100 片。","bǎ H1 yì tái fēizhēn zhuǎn dào A5, H1 fēizhēn chǎnnéng měitiān kěnéng zhǐyǒu bāshí dào yìbǎi piàn.","Move one flying probe from H1 to A5. H1's flying probe output may drop to 80–100 boards a day."],
+  ]},
+  { ill:"hand", title:"5. The ask to the NPI team", who:"Bob", lines:[
+    ["請評估手上 NPI 在 H1 SMT 的計畫跟數量。","qǐng pínggū shǒushàng NPI zài H1 SMT de jìhuà gēn shùliàng.","Please check your NPI builds planned for H1 SMT and their quantities."],
+    ["如果有 risk，先舉手，或提前把 plan 轉到 A5。","rúguǒ yǒu risk, xiān jǔshǒu, huò tíqián bǎ plan zhuǎn dào A5.","If there's a risk, flag it early, or move the plan to A5 ahead of time."],
+  ]},
+  { ill:"label", title:"6. Side issue: label mismatch before production", who:"Cathy and PE Rex", lines:[
+    ["MI350P MP 的 label BOM 跟實物不符合，明天生產前要確認。","MI350P MP de label BOM gēn shíwù bù fúhé, míngtiān shēngchǎn qián yào quèrèn.","The MI350P mass-production label BOM doesn't match the real part. It must be confirmed before tomorrow's production."],
+  ]},
+];
+
+const ICON_PLAY='<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>';
+const ICON_STOP='<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1"/></svg>';
+let rate=0.9, voice=null, current=null;
+const synth=window.speechSynthesis;
+function pickVoice(){ if(!synth) return; const vs=synth.getVoices();
+  voice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null;
+  document.getElementById('warn').hidden=!!voice||vs.length===0; }
+if(synth){pickVoice(); synth.onvoiceschanged=pickVoice;} else document.getElementById('warn').hidden=false;
+function reset(b){b.classList.remove('on'); b.innerHTML=ICON_PLAY;}
+function speak(text,btn){ if(!synth) return; synth.cancel();
+  if(current){reset(current);} if(current===btn){current=null;return;}
+  const u=new SpeechSynthesisUtterance(text); u.lang=voice?voice.lang:'zh-TW'; if(voice) u.voice=voice; u.rate=rate;
+  current=btn; btn.classList.add('on'); btn.innerHTML=ICON_STOP;
+  u.onend=u.onerror=()=>{reset(btn); if(current===btn) current=null;}; synth.speak(u); }
+function lineEl([zh,py,en]){ const d=document.createElement('div'); d.className='line';
+  const b=document.createElement('button'); b.className='play'; b.innerHTML=ICON_PLAY; b.setAttribute('aria-label','Play: '+en); b.onclick=()=>speak(zh,b);
+  const t=document.createElement('div'); t.className='txt';
+  t.innerHTML=`<div class="zh" lang="zh-Hant">${zh}</div><div class="py">${py}</div><div class="en">${en}</div>`;
+  d.append(b,t); return d; }
+document.querySelectorAll('.step .line').forEach((slot,i)=>slot.replaceWith(lineEl(FLOW[i])));
+const story=document.getElementById('story');
+STORY.forEach(s=>{ const c=document.createElement('article'); c.className='card';
+  c.innerHTML=`<div class="ill">${ILL[s.ill]}</div><div class="body"><div><h3>${s.title}</h3><div class="who">${s.who}</div></div></div>`;
+  const body=c.querySelector('.body'); s.lines.forEach(l=>body.append(lineEl(l))); story.append(c); });
+const slow=document.getElementById('sp-slow'), norm=document.getElementById('sp-norm');
+slow.onclick=()=>{rate=0.6;slow.setAttribute('aria-pressed','true');norm.setAttribute('aria-pressed','false')};
+norm.onclick=()=>{rate=0.9;norm.setAttribute('aria-pressed','true');slow.setAttribute('aria-pressed','false')};
+</script>
+
+</body></html>
