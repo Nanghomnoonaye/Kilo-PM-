@@ -1,0 +1,174 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kilo PM Phrasebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single column of phrase rows grouped by work situation, sticky control bar for speed + filter */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --fg:#17202b; --muted:#5b6878; --line:#dde3ea;
+  --accent:#1f5fa8; --accent-soft:#e3edf8; --tone:#b8501f;
+  --zh:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151c; --surface:#18202a; --fg:#e7edf4; --muted:#93a1b2; --line:#2a3542;
+  --accent:#7fb1ea; --accent-soft:#1d2d40; --tone:#f0956a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151c; --surface:#18202a; --fg:#e7edf4; --muted:#93a1b2; --line:#2a3542;
+  --accent:#7fb1ea; --accent-soft:#1d2d40; --tone:#f0956a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header h1{font-family:var(--zh);font-size:1.6rem;font-weight:700;margin:0;text-wrap:balance}
+header p{color:var(--muted);margin:4px 0 0;max-width:60ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;color:var(--muted);font:500 13px var(--body);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
+.bar input{flex:1 1 160px;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:7px 14px;font:14px var(--body)}
+.warn{font-size:13px;color:var(--tone)}
+section h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 0 8px;font-weight:600}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:12px 14px;border-top:1px solid var(--line);align-items:start}
+.row:first-child{border-top:0}
+.play{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer;display:grid;place-items:center}
+.play:focus-visible,.seg button:focus-visible,.bar input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.play.on{background:var(--accent);color:var(--bg)}
+.play svg{width:16px;height:16px}
+.txt{min-width:0}
+.zh{font-family:var(--zh);font-size:1.2rem;font-weight:500;line-height:1.4}
+.py{font-family:var(--mono);font-size:13px;color:var(--tone);margin-top:2px}
+.en{color:var(--fg);margin-top:2px}
+.note{color:var(--muted);font-size:13px;margin-top:2px}
+.empty{color:var(--muted);padding:16px}
+footer{color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Kilo PM 職場中文</h1>
+    <p>Phrases from the Kilo PM group chat. Tap ▶ to hear the Chinese. Pinyin is in orange.</p>
+  </header>
+
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Speed">
+      <button id="sp-slow" aria-pressed="false">Slow</button>
+      <button id="sp-norm" aria-pressed="true">Normal</button>
+    </div>
+    <input id="q" type="search" placeholder="Search Chinese, pinyin or English" aria-label="Search">
+    <span id="warn" class="warn" hidden>No Chinese voice found on this device. Try Safari or Chrome.</span>
+  </div>
+
+  <main id="out"></main>
+
+  <footer>Audio uses your device's built-in Chinese voice (Taiwan voice when available), so it sounds slightly different on each phone.</footer>
+</div>
+
+<script>
+const DATA = [
+ ["Asking someone to do something", [
+  ["請評估一下","qǐng pínggū yíxià","Please evaluate this."],
+  ["麻煩你這邊跟一下這件事","máfan nǐ zhèbiān gēn yíxià zhè jiàn shì","Could you follow up on this?","跟 = track, chase"],
+  ["請幫忙確認","qǐng bāngmáng quèrèn","Please help confirm."],
+  ["看看什麼時候會有 update","kànkan shénme shíhòu huì yǒu update","Check when there'll be an update."],
+ ]],
+ ["Replying and committing", [
+  ["好，我聯絡他","hǎo, wǒ liánluò tā","OK, I'll contact him."],
+  ["我再找 team review 一下，再更新出來","wǒ zài zhǎo team review yíxià, zài gēngxīn chūlái","I'll have the team review it, then send an update."],
+  ["評估無 risk","pínggū wú risk","Assessed: no risk."],
+  ["明天生產","míngtiān shēngchǎn","Production is tomorrow."],
+ ]],
+ ["Raising concerns and giving your view", [
+  ["如果有 risk，先舉手","rúguǒ yǒu risk, xiān jǔshǒu","If there's a risk, flag it early.","Literally: raise your hand first"],
+  ["提前操作","tíqián cāozuò","Act in advance."],
+  ["我的理解是……","wǒ de lǐjiě shì","My understanding is…","Good for summarizing a meeting"],
+  ["不建議現在就減少測點","bú jiànyì xiànzài jiù jiǎnshǎo cèdiǎn","I don't recommend reducing test points right now."],
+  ["現在不適合馬上做","xiànzài bú shìhé mǎshàng zuò","It's not a good time to do it right away."],
+  ["有沒有影響？","yǒu méiyǒu yǐngxiǎng","Is there any impact?"],
+  ["是個隱憂","shì ge yǐnyōu","It's a hidden concern."],
+  ["畢竟現在只有五台","bìjìng xiànzài zhǐ yǒu wǔ tái","After all, there are only five units now.","畢竟 = after all"],
+  ["另外","lìngwài","Also / in addition"],
+  ["來考量這一點","lái kǎoliáng zhè yì diǎn","…to take this point into account"],
+ ]],
+ ["Factory vocabulary", [
+  ["飛針","fēizhēn","flying probe"],
+  ["測點","cèdiǎn","test point"],
+  ["測站","cèzhàn","test station"],
+  ["產能","chǎnnéng","capacity"],
+  ["機台不穩","jītái bù wěn","The machine is unstable."],
+  ["減少／縮短","jiǎnshǎo / suōduǎn","reduce / shorten (e.g. cycle time)"],
+  ["拿掉","nádiào","remove"],
+  ["小量","xiǎoliàng","small volume"],
+  ["實物跟 BOM 不符合","shíwù gēn BOM bù fúhé","The physical part doesn't match the BOM."],
+  ["廠長","chǎngzhǎng","plant manager"],
+  ["去借？去租？","qù jiè? qù zū?","Borrow it? Rent it?"],
+ ]],
+ ["Casual chat", [
+  ["他講得挺理性的","tā jiǎng de tǐng lǐxìng de","He was quite reasonable about it."],
+  ["變成被追殺的那個","biànchéng bèi zhuīshā de nàge","become the one everyone's chasing","Joke for becoming the bottleneck"],
+  ["奇怪的知識增加了","qíguài de zhīshì zēngjiā le","Weird knowledge +1","Popular meme reply"],
+ ]],
+];
+
+const ICON_PLAY = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>';
+const ICON_STOP = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1"/></svg>';
+let rate = 0.9, voice = null, current = null;
+const synth = window.speechSynthesis;
+
+function pickVoice(){
+  if(!synth) return;
+  const vs = synth.getVoices();
+  voice = vs.find(v=>/zh[-_]TW/i.test(v.lang)) || vs.find(v=>/zh[-_]HK/i.test(v.lang)&&/mandarin/i.test(v.name)) || vs.find(v=>/^zh/i.test(v.lang)) || null;
+  document.getElementById('warn').hidden = !!voice || vs.length===0;
+}
+if(synth){ pickVoice(); synth.onvoiceschanged = pickVoice; }
+else document.getElementById('warn').hidden = false;
+
+function speak(text, btn){
+  if(!synth) return;
+  synth.cancel();
+  if(current){ current.classList.remove('on'); current.innerHTML = ICON_PLAY; }
+  if(current===btn){ current=null; return; }
+  const u = new SpeechSynthesisUtterance(text.replace(/[／]/g,'，'));
+  u.lang = voice ? voice.lang : 'zh-TW';
+  if(voice) u.voice = voice;
+  u.rate = rate;
+  current = btn; btn.classList.add('on'); btn.innerHTML = ICON_STOP;
+  u.onend = u.onerror = ()=>{ btn.classList.remove('on'); btn.innerHTML = ICON_PLAY; if(current===btn) current=null; };
+  synth.speak(u);
+}
+
+function render(q=''){
+  q = q.trim().toLowerCase();
+  const out = document.getElementById('out'); out.innerHTML='';
+  let n=0;
+  DATA.forEach(([title, rows])=>{
+    const hit = rows.filter(r=>!q || r.join(' ').toLowerCase().includes(q));
+    if(!hit.length) return;
+    const s=document.createElement('section');
+    s.innerHTML=`<h2>${title}</h2>`;
+    const l=document.createElement('div'); l.className='list';
+    hit.forEach(([zh,py,en,note])=>{
+      n++;
+      const r=document.createElement('div'); r.className='row';
+      const b=document.createElement('button'); b.className='play'; b.innerHTML=ICON_PLAY;
+      b.setAttribute('aria-label','Play '+en);
+      b.onclick=()=>speak(zh,b);
+      const t=document.createElement('div'); t.className='txt';
+      t.innerHTML=`<div class="zh" lang="zh-Hant">${zh}</div><div class="py">${py}</div><div class="en">${en}</div>${note?`<div class="note">${note}</div>`:''}`;
+      r.append(b,t); l.append(r);
+    });
+    s.append(l); out.append(s);
+  });
+  if(!n) out.innerHTML='<p class="empty">No phrases match that search.</p>';
+}
+render();
+document.getElementById('q').addEventListener('input',e=>render(e.target.value));
+const slow=document.getElementById('sp-slow'), norm=document.getElementById('sp-norm');
+slow.onclick=()=>{rate=0.6;slow.setAttribute('aria-pressed','true');norm.setAttribute('aria-pressed','false')};
+norm.onclick=()=>{rate=0.9;norm.setAttribute('aria-pressed','true');slow.setAttribute('aria-pressed','false')};
+</script>
+
+</body></html>
